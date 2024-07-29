@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
+const {v4 : uuidv4} =require('uuid')
 
 const app = express();
 const server = http.createServer(app);
@@ -9,6 +10,11 @@ const wss = new WebSocket.Server({server });
 const channels = {}; 
 
 wss.on('connection', (ws) => {
+    const clientId1 = uuidv4();
+    const clientId2 = uuidv4()
+
+    console.log("connected");
+    
   console.log("connected")
     ws.on('message', (message) => {
         const data = JSON.parse(message);
@@ -18,14 +24,14 @@ wss.on('connection', (ws) => {
             channels[channelId] = channels[channelId] || [];
             channels[channelId].push(ws);
 
-            ws.send(JSON.stringify({ type: 'channel_created', channelId: channelId }));
+            ws.send(JSON.stringify({ type: 'channel_created', channelId: channelId, userId:clientId1, color:"blue" }));
         }
 
         if (data.type === 'join_channel') {
             const channelId = data.channelId;
             if (channels[channelId]) {
                 channels[channelId].push(ws);
-                ws.send(JSON.stringify({ type: 'joined_channel', channelId: channelId }));
+                ws.send(JSON.stringify({ type: 'joined_channel', channelId: channelId,userId:clientId2,color:"red" }));
             } else {
                 ws.send(JSON.stringify({ type: 'error', message: 'Channel does not exist' }));
             }
@@ -44,6 +50,7 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
+        console.log("closed")
         for (const channelId in channels) {
             channels[channelId] = channels[channelId].filter(client => client !== ws);
             if (channels[channelId].length === 0) {
