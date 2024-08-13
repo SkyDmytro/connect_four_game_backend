@@ -12,6 +12,7 @@ const channels = {};
 wss.on('connection', (ws) => {
     const clientId1 = uuidv4();
     const clientId2 = uuidv4()
+    const currentTurn = "blue";
 
     console.log("connected");
     
@@ -23,15 +24,17 @@ wss.on('connection', (ws) => {
             const channelId = data.channelId;
             channels[channelId] = channels[channelId] || [];
             channels[channelId].push(ws);
-
-            ws.send(JSON.stringify({ type: 'channel_created', channelId: channelId, userId:clientId1, color:"blue" }));
+            console.log("create channel")
+            
+            const newUser = { type: 'channel_created', channelId: channelId, userId:clientId1, color:"blue",currentTurn:currentTurn }
+            ws.send(JSON.stringify(newUser))
         }
 
         if (data.type === 'join_channel') {
             const channelId = data.channelId;
             if (channels[channelId]) {
                 channels[channelId].push(ws);
-                ws.send(JSON.stringify({ type: 'joined_channel', channelId: channelId,userId:clientId2,color:"red" }));
+                ws.send(JSON.stringify({ type: 'joined_channel', channelId: channelId,userId:clientId2,color:"red",currentTurn:currentTurn }));
             } else {
                 ws.send(JSON.stringify({ type: 'error', message: 'Channel does not exist' }));
             }
